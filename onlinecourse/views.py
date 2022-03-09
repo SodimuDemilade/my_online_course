@@ -111,14 +111,16 @@ def enroll(request, course_id):
          # Add each selected choice object to the submission object
          # Redirect to show_exam_result with the submission id
 def submit(request, course_id):
-    myenrollment = Enrollment.objects.get(user=user, course=course)
-    Submission.objects.create(enrollment=myenrollment)
+    myenrollment = Enrollment.objects.get(user=request.user, course = get_object_or_404(Course, pk=course_id))
+    submission = Submission.objects.create(enrollment=myenrollment)
     for key in request.POST:
        if key.startswith('choice'):
            value = request.POST[key]
            choice_id = int(value)
-           Submission.objects.add(choice_id=choice_id)
-    return HttpResponseRedirect(reverse(viewname='onlinecourse:show_exam_reult', args=(submission.id,)))
+           mychoice = Choice.objects.get(id=choice_id)
+           submission.chocies.add(mychoice)
+    # return HttpResponseRedirect(viewname='onlinecourse:show_exam_result', args=(submission.id,))
+    return redirect('onlinecourse:show_exam_result', submission_id=submission.id, course_id=course_id)
 
 
 
@@ -141,7 +143,20 @@ def submit(request, course_id):
         # Get the selected choice ids from the submission record
         # For each selected choice, check if it is a correct answer or not
         # Calculate the total score
-#def show_exam_result(request, course_id, submission_id):
+def show_exam_result(request, course_id, submission_id):
+    total_score = 0
+    # course = Course.objects.get(id=course_id)
+    course = get_object_or_404(Course, pk=course_id)
+    submission = Submission.objects.get(id=submission_id)
+    selected_choice = submission.chocies
+    for choice in selected_choice.all():
+        if choice.is_correct == True:
+            total_score += choice.question.grade
+        # if choice.question.is_get_score == True:
+        #     total_score += choice.question.grade
+    context = {'course':course, 'selected_ids':selected_choice, 'grade':total_score}
+    return render(request, "onlinecourse/exam_result_bootstrap.html", context)
+
 
 
 
