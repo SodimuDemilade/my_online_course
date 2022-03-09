@@ -119,7 +119,7 @@ def submit(request, course_id):
            choice_id = int(value)
            mychoice = Choice.objects.get(id=choice_id)
            submission.chocies.add(mychoice)
-    # return HttpResponseRedirect(viewname='onlinecourse:show_exam_result', args=(submission.id,))
+    submission.save()
     return redirect('onlinecourse:show_exam_result', submission_id=submission.id, course_id=course_id)
 
 
